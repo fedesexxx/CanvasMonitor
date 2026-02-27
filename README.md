@@ -1,12 +1,45 @@
-# canbebeaten
-HTML website that tests Canvas Exam Anti-Cheat system by using the same JavaScript modules.
+# Canvas Monitor
 
-8/12/2024 the canvas anti cheat system is beatable!!!!!!
-28/1/2025 forgot to put the link 💀💀💀 https://fedesexxx.github.io/canbebeaten/
-16/5/2025 gonna update it i swear
+![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
+![Made with](https://img.shields.io/badge/made%20with-HTML%2C%20CSS%2C%20JavaScript-blue)
+![License](https://img.shields.io/badge/license-educational-lightgrey)
 
-Use:
-The website marks all the times the user stops focusing main site, same as canvas,
-the methods that doesnt trigger the alerts in this website, are compatible with canvas
+Canvas Monitor is a client-side simulation of browser focus-detection mechanisms commonly used in online assessment platforms.
 
-visca catalunya lliure!!!!!!! 
+It reproduces the same JavaScript signals typically used to detect when a user switches tabs, minimizes the browser, or changes window focus during an online exam.
+
+---
+
+## Features
+
+- Real-time focus detection
+- Timestamped event logging
+- Local session persistence via `localStorage`
+- Optional sound alerts
+- Responsive Canvas-inspired UI
+
+---
+
+## Technical Details
+
+This project relies exclusively on standard browser APIs:
+
+- `document.visibilityState`
+- `visibilitychange`
+- `window.blur`
+- `window.focus`
+- `AudioContext` (optional alert system)
+
+All logic runs entirely in the browser.  
+No server-side components are used.
+
+---
+
+## Live Demo
+
+https://fedesexxx.github.io/canbebeaten/
+
+---
+
+This project is intended for educational and experimental use.
