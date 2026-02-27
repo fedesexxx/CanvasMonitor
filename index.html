@@ -1,134 +1,1019 @@
-prueba JavaScript 
-vivan las gueritas mamonas
-
 <!DOCTYPE html>
-<html lang="en">
+<html dir="ltr" lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detección de cambios de página...</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .log {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            height: 200px;
-            overflow-y: auto;
-            background: #f9f9f9;
-        }
-    </style>
-    <script>
-        let contadorIniciado = false;
-        let tiempoInicio;
-        let tiempoDesenfoque;
-        let pestanaOculta = false;
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canvas Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        function formatearTiempo(tiempoEnMs) {
-            const totalSegundos = Math.floor(tiempoEnMs / 1000);
-            const minutos = Math.floor(totalSegundos / 60);
-            const segundos = totalSegundos % 60;
-            return `${minutos}m ${segundos}s`;
-        }
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --bg-hover: #eef0f1;
+      --surface: #ffffff;
+      --border: #c7cdd1;
+      --border-light: #f0f0f0;
+      --text: #2d3b45;
+      --text-muted: #6b7780;
+      --link: #0770A3;
+      --green: #00AC18;
+      --green-dark: #008c13;
+      --green-soft: #f0faf4;
+      --green-border: #0B874B;
+      --red: #C7003B;
+      --red-soft: #fff5f7;
+      --yellow: #f0ad4e;
+      --shadow: rgba(0,0,0,0.12);
+      --nav-text: rgba(255,255,255,0.85);
+      --nav-active-bg: rgba(0,0,0,0.2);
+    }
 
-        function logMessage(message) {
-            const logDiv = document.getElementById("log");
-            const now = new Date();
-            const time = now.toLocaleTimeString();
 
-            let tiempoTranscurrido = "";
-            if (contadorIniciado) {
-                const ahora = new Date();
-                const diferencia = ahora - tiempoInicio;
-                tiempoTranscurrido = formatearTiempo(diferencia);
-            }
+    body {
+      font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+      min-height: 100vh;
+    }
 
-            const fullMessage = `${time} (${tiempoTranscurrido}) - ${message}`;
-            const newMessage = document.createElement("p");
-            newMessage.textContent = fullMessage;
-            logDiv.appendChild(newMessage);
-            logDiv.scrollTop = logDiv.scrollHeight;
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-            let registros = JSON.parse(localStorage.getItem("registroEventos") || "[]");
-            registros.push(fullMessage);
-            localStorage.setItem("registroEventos", JSON.stringify(registros));
-        }
+    /* =================== GLOBAL NAV (left sidebar) =================== */
+    #header {
+      width: 80px;
+      background: #00AC18;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      overflow: hidden;
+    }
 
-        function iniciarContador() {
-            if (!contadorIniciado) {
-                contadorIniciado = true;
-                tiempoInicio = new Date();
-                logMessage("Se empezará a registrar desde ahora...");
-            }
-        }
+    .ic-app-header__logomark-container {
+      background: #00AC18;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 4px;
+    }
 
-        document.addEventListener("visibilitychange", () => {
-            if (contadorIniciado) {
-                if (document.visibilityState === "hidden" && !pestanaOculta) {
-                    tiempoDesenfoque = new Date();
-                    pestanaOculta = true;
-                    logMessage("Ha salido de la página");
-                } else if (document.visibilityState === "visible" && pestanaOculta) {
-                    const tiempoEnfocado = new Date();
-                    const diferencia = tiempoEnfocado - tiempoDesenfoque;
-                    const tiempoDesenfocadoFormateado = formatearTiempo(diferencia);
-                    logMessage(`Se ha vuelto a enfocar la pestaña después de ${tiempoDesenfocadoFormateado}`);
-                    pestanaOculta = false;
-                }
-            }
-        });
+    .ic-app-header__logomark-container a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        window.addEventListener("blur", () => {
-            if (contadorIniciado && !pestanaOculta) {
-                tiempoDesenfoque = new Date();
-                pestanaOculta = true;
-                logMessage("La ventana está desenfocada");
-            }
-        });
+    .logo-svg { width: 40px; height: 40px; fill: white; }
 
-        window.addEventListener("focus", () => {
-            if (contadorIniciado && pestanaOculta) {
-                const tiempoEnfocado = new Date();
-                const diferencia = tiempoEnfocado - tiempoDesenfoque;
-                const tiempoDesenfocadoFormateado = formatearTiempo(diferencia);
-                logMessage(`Se ha vuelto a enfocar la pestaña después de ${tiempoDesenfocadoFormateado}`);
-                pestanaOculta = false;
-            }
-        });
+    .ic-app-header__menu-list {
+      list-style: none;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
 
-        // Mostrar registros guardados al cargar
-        window.addEventListener("DOMContentLoaded", () => {
-            const logDiv = document.getElementById("log");
-            const registrosGuardados = JSON.parse(localStorage.getItem("registroEventos") || "[]");
-            registrosGuardados.forEach(msg => {
-                const p = document.createElement("p");
-                p.textContent = msg;
-                logDiv.appendChild(p);
-            });
-        });
-    </script>
+    .ic-app-header__menu-list-item a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 12px 4px 10px;
+      color: rgba(255,255,255,0.85);
+      font-size: 10px;
+      font-weight: 400;
+      text-decoration: none;
+      position: relative;
+      line-height: 1.2;
+      text-align: center;
+      transition: background 0.15s;
+    }
+
+    .ic-app-header__menu-list-item a:hover {
+      background: rgba(0,0,0,0.2);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .ic-app-header__menu-list-item--active > a {
+      background: rgba(0,0,0,0.2);
+      color: #fff;
+    }
+
+    .ic-app-header__menu-list-item a svg {
+      width: 26px;
+      height: 26px;
+      fill: currentColor;
+    }
+
+    .menu-item__badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: #f39c12;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+    }
+
+    .ic-app-header__secondary-navigation {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      margin-top: auto;
+    }
+
+    .ic-app-header__secondary-navigation a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 0;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .ic-app-header__secondary-navigation a:hover {
+      background: rgba(0,0,0,0.15);
+      color: #fff;
+    }
+
+    .ic-app-header__secondary-navigation svg {
+      width: 22px; height: 18px;
+      fill: currentColor;
+    }
+
+    /* profile avatar */
+    .ic-avatar img {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+
+    /* =================== WRAPPER =================== */
+    #wrapper {
+      margin-left: 80px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* =================== TOP NAV TOGGLE + BREADCRUMBS =================== */
+    .ic-app-nav-toggle-and-crumbs {
+      display: flex;
+      align-items: center;
+      height: 42px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0 12px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    #courseMenuToggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 12px;
+      height: 42px;
+      color: var(--text);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    #courseMenuToggle:hover { background: var(--bg-hover); }
+
+    .ic-app-crumbs { flex: 1; }
+
+    #breadcrumbs ol { list-style: none; display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    #breadcrumbs li { display: flex; align-items: center; font-size: 13px; }
+    #breadcrumbs li:not(:last-child)::after { content: '›'; color: var(--text-muted); margin: 0 4px; font-size: 14px; }
+    #breadcrumbs a { color: var(--link); font-size: 13px; }
+    #breadcrumbs li[aria-current="page"] a { color: var(--text); cursor: default; }
+    #breadcrumbs li[aria-current="page"] a:hover { text-decoration: none; }
+    .home-icon { font-size: 16px; }
+
+    /* =================== LAYOUT COLUMNS =================== */
+    #main { display: flex; flex: 1; }
+
+    /* =================== LEFT SIDE (course nav) =================== */
+    #left-side {
+      width: 200px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      transition: width 0.25s ease, opacity 0.25s ease;
+      opacity: 1;
+    }
+
+    #left-side.collapsed {
+      width: 0;
+      opacity: 0;
+      border-right: none;
+    }
+
+    /* =================== MOBILE =================== */
+    @media (max-width: 768px) {
+      #header {
+        width: 56px;
+      }
+
+      #wrapper {
+        margin-left: 56px;
+      }
+
+      .ic-app-header__menu-list-item a {
+        font-size: 8px;
+        padding: 10px 2px 8px;
+        gap: 2px;
+      }
+
+      .ic-app-header__menu-list-item a svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .ic-avatar img {
+        width: 28px;
+        height: 28px;
+      }
+
+      .ic-app-header__logomark-container {
+        padding: 10px 0;
+      }
+
+      .logo-svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      /* Left side collapses on mobile by default via JS */
+      #left-side {
+        position: fixed;
+        top: 42px;
+        left: 56px;
+        bottom: 0;
+        z-index: 40;
+        box-shadow: 2px 0 8px var(--shadow);
+      }
+
+      #left-side.collapsed {
+        width: 0;
+        opacity: 0;
+        box-shadow: none;
+      }
+
+      #content-wrapper {
+        padding: 16px 16px 32px !important;
+      }
+
+      h1.title {
+        font-size: 20px !important;
+      }
+
+      .student-assignment-overview {
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .student-assignment-overview li {
+        padding-right: 0;
+      }
+
+      .btn-row {
+        flex-wrap: wrap;
+      }
+
+      .Button {
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+
+      #breadcrumbs li {
+        font-size: 11px;
+      }
+
+      /* Sound toggle stacks vertically */
+      div[style*="display:flex;align-items:flex-start"] {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .log-body {
+        height: 220px;
+      }
+
+      .td-elapsed {
+        display: none;
+      }
+
+      .log-body table thead th:nth-child(3) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #header {
+        width: 48px;
+      }
+
+      #wrapper {
+        margin-left: 48px;
+      }
+
+      .menu-item__text {
+        display: none;
+      }
+
+      .ic-app-header__menu-list-item a {
+        padding: 12px 0;
+      }
+    }
+
+    #sticky-container {
+      padding-top: 12px;
+    }
+
+    #section-tabs-header-subtitle {
+      display: block;
+      padding: 0 16px 8px;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #section-tabs { list-style: none; }
+
+    #section-tabs li a {
+      display: block;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--text);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    #section-tabs li a:hover {
+      background: var(--bg-hover);
+      text-decoration: none;
+    }
+
+    #section-tabs li a.active {
+      background: var(--bg-hover);
+      border-left-color: var(--green);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* =================== CONTENT AREA =================== */
+    #not_right_side { flex: 1; min-width: 0; }
+
+    #content-wrapper { padding: 24px 40px 40px; }
+
+    /* =================== ASSIGNMENT SHOW =================== */
+    .assignment-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    h1.title {
+      font-size: 26px;
+      font-weight: 200;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .student-assignment-overview {
+      list-style: none;
+      display: flex;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+      margin: 12px 0 16px;
+      flex-wrap: wrap;
+    }
+
+    .student-assignment-overview li {
+      display: flex;
+      gap: 6px;
+      padding-right: 24px;
+      font-size: 13px;
+      align-items: baseline;
+    }
+
+    .student-assignment-overview .title { font-weight: 700; color: var(--text); }
+    .student-assignment-overview .value { color: var(--text); }
+
+    .lock-notice { font-size: 13px; color: var(--text); margin-bottom: 16px; }
+
+    /* =================== DETECTOR SECTION =================== */
+    .detector-section {
+      margin-top: 24px;
+    }
+
+    /* Status chips row */
+    .status-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--surface);
+      color: var(--text-muted);
+    }
+
+    .status-chip .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .status-chip.green { border-color: var(--green-border); color: var(--green-border); background: var(--green-soft); }
+    .status-chip.green .dot { background: var(--green-border); }
+    .status-chip.red { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+    .status-chip.red .dot { background: var(--red); animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Buttons - Canvas style */
+    .btn-row { display: flex; gap: 8px; margin-bottom: 20px; }
+
+    .Button {
+      font-family: "Lato", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      padding: 8px 14px;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 1px solid;
+      line-height: 1.4;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .Button--primary { background: var(--green); border-color: var(--green-dark); color: #fff; }
+    .Button--primary:hover { background: var(--green-dark); }
+    .Button--primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .Button--secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .Button--secondary:hover { background: var(--bg-hover); }
+
+    /* Log table */
+    .log-box { border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+
+    .log-box-header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .log-box-header h3 { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    .ic-badge { background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+    .log-body { height: 300px; overflow-y: auto; background: var(--surface); }
+
+    .log-body table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+    .log-body table thead th {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      position: sticky;
+      top: 0;
+    }
+
+    .log-body table tbody tr { border-bottom: 1px solid var(--border-light); animation: rowIn 0.2s ease; }
+
+    @keyframes rowIn { from{background:var(--green-soft)} to{background:transparent} }
+
+    .log-body table tbody tr:hover { background: var(--bg-hover); }
+    .log-body table tbody td { padding: 8px 12px; vertical-align: middle; }
+
+    .td-bar { width: 4px; padding: 0 !important; }
+    .bar-default { background: var(--border); }
+    .bar-out { background: var(--red); }
+    .bar-in { background: var(--green-border); }
+    .bar-start { background: #E66000; }
+
+    .td-time { color: var(--text-muted); width: 100px; }
+    .td-elapsed { color: var(--green); width: 75px; font-weight: 700; }
+    .td-msg { color: var(--text); }
+    tr.type-out .td-msg { color: var(--red); }
+    tr.type-in .td-msg { color: var(--green-border); }
+    tr.type-start .td-msg { color: #E66000; font-weight: 700; }
+
+    .log-empty { padding: 48px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+    .meta-bar { display: flex; gap: 28px; font-size: 13px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .meta-bar strong { font-weight: 700; }
+    .meta-bar .meta-val { color: var(--text); }
+
+    noscript .ic-flash-error {
+      background: #fdf3f3;
+      border: 1px solid #C7003B;
+      color: #C7003B;
+      padding: 12px 16px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
 
-    <noscript>
-        <div style="color: red; background: #ffe6e6; padding: 10px; border: 2px solid red; font-weight: bold;">
-            ⚠️ JavaScript está desactivado en tu navegador. Esta página requiere JavaScript para funcionar correctamente.
-        </div>
-    </noscript>
+<!-- ========== GLOBAL NAV ========== -->
+<header id="header">
+  <div class="ic-app-header__main-navigation">
+    <div class="ic-app-header__logomark-container">
+      <a href="#">
+        <!-- Tecmilenio-style logo placeholder -->
+        <svg class="logo-svg" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+          <path d="M30 5 C18 5 8 14 8 26 C8 38 18 47 30 47 C42 47 52 38 52 26 C52 14 42 5 30 5Z" fill="none" stroke="white" stroke-width="3"/>
+          <line x1="30" y1="5" x2="30" y2="52" stroke="white" stroke-width="3"/>
+          <line x1="8" y1="26" x2="52" y2="26" stroke="white" stroke-width="3"/>
+        </svg>
+      </a>
+    </div>
+    <ul class="ic-app-header__menu-list">
+      <li class="ic-app-header__menu-list-item">
+        <a href="https://letterboxd.com/fedejimenez/" target="_blank" rel="noopener">
+          <div class="ic-avatar"><img src="https://i.pravatar.cc/36?img=12" alt="Account"/></div>
+          Account
+        </a>
+      </li>
+      <li class="ic-app-header__menu-list-item">
+        <a href="#">
+          <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg"><path d="M273,181H197V165h63A122,122,0,1,0,18,142a124,124,0,0,0,2,23H90v16H7l-2-6A139,139,0,0,1,2,142C2,66,64,4,140,4S278,66,278,142a138,138,0,0,1-4,33ZM66,88,50,71,62,60l16,16Zm147,0-11-12,16-16,12,12ZM132,54V31h16v23Zm16,142a32,32,0,0,1-28-17C114,167,104,107,102,95a8,8,0,0,1,14-7c9,8,53,50,60,62a32,32,0,0,1-28,46ZM122,116c4,25,9,50,12,55a15,15,0,1,0,27-14C158,152,140,133,122,116Z"/></svg>
+          Dashboard
+        </a>
+      </li>
+      <li class="ic-app-header__menu-list-item ic-app-header__menu-list-item--active">
+        <a href="#">
+          <svg viewBox="0 0 280 259" xmlns="http://www.w3.org/2000/svg"><path d="M73,198c-12,0-22,8-24,19a27,27,0,0,0,0,4v0a22,22,0,0,0,5,15,22,22,0,0,0,17,8H200V228H66V213H200V198Zm21-106h91V62H94ZM79,107V47H200v60Zm8,30V122H192v15ZM72,17A23,23,0,0,0,49,39V191a41,41,0,0,1,24-8H230V17ZM34,39A38,38,0,0,1,72,2H245V198H215v45h23V258H72A38,38,0,0,1,34,220Z"/></svg>
+          Courses
+        </a>
+      </li>
+      <li class="ic-app-header__menu-list-item">
+        <a href="#" onclick="showCredits(event)" style="justify-content:center;">
+          <svg viewBox="0 0 200 135" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;"><path d="M134.5 129.4c0-1.1 0-19.8-6.2-31.1-4.5-8.5-16.4-12.4-35-19.2-1.7-.6-3.4-1.1-5.1-1.7v-8.5c5.6-5.1 8.5-12.4 8.5-20.3V29.4C96.6 13 83.6 0 67.2 0S37.9 13 37.9 29.4v19.2c0 7.3 3.4 14.7 8.5 20.3v8.5c-1.7.6-3.4 1.1-5.1 1.7-18.6 6.2-30.5 10.7-35 19.2C0 109.6 0 128.8 0 129.4c0 3.4 2.3 5.6 5.6 5.6h123.7c3.5 0 5.7-2.3 5.2-5.6zm61.5 0c0-.6 0-15.3-4.8-24-3.5-6.5-12.6-9.5-27-14.8l-1.3-.5v-6.6c4.3-3.9 6.6-9.4 6.6-15.4V57.8c0-12-9.4-21.4-21.4-21.4s-21.4 9.4-21.4 21.4v10.3c0 6 2.2 11.5 6.6 15.4v6.6l-1.3.5c-5.6 2.1-10 4.4-13 7-1.3.8-1.8 2.2-1.8 3.9.5 1.3 1.3 2.6 2.6 3.5 6.1 3.1 9.5 5.6 10.8 8.2 1.7 3.5 3 7.9 3.9 14h60.5c.1-3.3.1-18.7-1-24.8z"/></svg>
+          Groups
+        </a>
+      </li>
+      <li class="ic-app-header__menu-list-item" style="position:relative;">
+        <a href="#">
+          <svg viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"><path d="M92,121h97V105H92Zm0,48h80V153H92Zm0-97h80V56H92Zm161,35H229V11H52v96H27A24,24,0,0,0,3,131V244a24,24,0,0,0,24,14H253a24,24,0,0,0,24-24V131A24,24,0,0,0,253,107Zm0,16a8,8,0,0,1,8,8v52l-32,19V123ZM68,204V27H212V204ZM27,123H51v79L19,183V131A8,8,0,0,1,27,123ZM253,252H27a8,8,0,0,1-8-8V202l30,18H231l30-18v42A8,8,0,0,1,253,252Z"/></svg>
+          Inbox
+          <span class="menu-item__badge" id="sidebar-badge">0</span>
+        </a>
+      </li>
+      <li class="ic-app-header__menu-list-item">
+        <a href="#" onclick="showHowItWorks(event)">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M100,128A11,11,0,1,0,111,139,11,11,0,0,0,100,128Zm9-88a33,33,0,0,1,24,24,34,34,0,0,1-24,41,3,3,0,0,0-3,3v9H94v-9a15,15,0,0,1,11-14,22,22,0,0,0,14-10,23,23,0,0,0,2-17,22,22,0,0,0-15-15,23,23,0,0,0-20,4,22,22,0,0,0-9,18H67a33,33,0,0,1,13-26A34,34,0,0,1,109,40ZM100,5A95,95,0,1,0,195,100,95,95,0,0,0,100,5m0,178A84,84,0,1,1,184,100,84,84,0,0,1,100,183"/></svg>
+          Help
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="ic-app-header__secondary-navigation">
+    <ul class="ic-app-header__menu-list">
+      <li>
+        <a href="#" title="Minimizar navegación">
+          <svg viewBox="0 0 40 32" xmlns="http://www.w3.org/2000/svg"><path d="M39.5,30V2H37V30ZM35,16,22,4l-2,2,10,10H.5v2H30L20,28l2,2Z"/></svg>
+        </a>
+      </li>
+    </ul>
+  </div>
+</header>
 
-    <h1>Sistema de detección de Canvas</h1>
-    <p>Interactúa con otras ventanas, cambia de pestaña o minimiza esta para ver los mensajes en tiempo real.</p>
+<!-- ========== MAIN WRAPPER ========== -->
+<div id="wrapper">
 
-    <button onclick="iniciarContador()">Empezar a registrar</button>
-    <button onclick="localStorage.removeItem('registroEventos'); location.reload();">Borrar registros</button>
+  <!-- Breadcrumbs bar -->
+  <div class="ic-app-nav-toggle-and-crumbs">
+    <button type="button" id="courseMenuToggle" onclick="toggleCourseNav()">
+      &#9776;
+    </button>
+    <div class="ic-app-crumbs">
+      <nav id="breadcrumbs" role="navigation" aria-label="breadcrumbs">
+        <ol>
+          <li class="home"><a href="#"><span class="home-icon">⌂</span></a></li>
+          <li><a href="#">Sexología</a></li>
+          <li><a href="#">Assignments</a></li>
+          <li aria-current="page"><a href="#">Canvas Monitor</a></li>
+        </ol>
+      </nav>
+    </div>
+  </div>
 
-    <div id="log" class="log">
-        <p>Eventos registrados aparecerán aquí...</p>
-    </div>
+  <!-- Layout columns -->
+  <div id="main">
 
+    <!-- Left: course nav -->
+    <div id="left-side">
+      <div id="sticky-container">
+        <span id="section-tabs-header-subtitle">Semestral - 2026 Ene - May</span>
+        <nav>
+          <ul id="section-tabs">
+            <li class="section"><a href="#">Home</a></li>
+            <li class="section"><a href="#" onclick="showHowItWorks(event)" style="font-weight:700;">¿Cómo funciona?</a></li>
+            <li class="section"><a href="#" onclick="showCredits(event)">People</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Right: main content -->
+    <div id="not_right_side">
+      <div id="content-wrapper">
+
+        <noscript>
+          <div style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;">
+            <div style="background:var(--surface);border-radius:4px;padding:40px;max-width:420px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+              <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+              <h2 style="font-family:'Lato',sans-serif;font-size:20px;font-weight:700;color:#C7003B;margin-bottom:12px;">JavaScript desactivado</h2>
+              <p style="font-size:13px;color:var(--text);line-height:1.7;">Esta página <strong>no puede funcionar</strong> sin JavaScript activado. La detección de cambios de pestaña y ventana depende completamente de JS.<br><br>Actívalo en la configuración de tu navegador y recarga la página.</p>
+            </div>
+          </div>
+        </noscript>
+
+        <!-- Assignment header -->
+        <div id="assignment_show">
+          <div class="assignment-title">
+            <h1 class="title">Canvas Monitor</h1>
+          </div>
+
+          <ul class="student-assignment-overview">
+            <li>
+              <span class="title">Estado</span>
+              <span class="value" id="meta-estado">Inactivo</span>
+            </li>
+            <li>
+              <span class="title">Eventos</span>
+              <span class="value" id="meta-eventos">0</span>
+            </li>
+            <li>
+              <span class="title">Tiempo transcurrido</span>
+              <span class="value" id="meta-tiempo">00:00</span>
+            </li>
+            <li>
+              <span class="title">Foco</span>
+              <span class="value" id="meta-foco">En espera</span>
+            </li>
+          </ul>
+
+          <div class="detector-section">
+
+            <div class="status-row">
+              <div class="status-chip" id="chip-rec">
+                <div class="dot"></div>
+                Grabación inactiva
+              </div>
+              <div class="status-chip" id="chip-focus">
+                <div class="dot"></div>
+                Ventana en espera
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="Button Button--primary" id="btn-start" onclick="iniciarContador()">
+                Empezar a registrar
+              </button>
+              <button class="Button Button--secondary" onclick="limpiarRegistros()">
+                Borrar registros
+              </button>
+            </div>
+
+            <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:3px;padding:12px 16px;margin-bottom:20px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;margin-top:1px;">
+                <input type="checkbox" id="sound-toggle" style="width:15px;height:15px;accent-color:#00AC18;cursor:pointer;">
+                <span style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;">🔔 Alerta de sonido</span>
+              </label>
+              <p style="font-size:12px;color:var(--text-muted);line-height:1.6;margin:0;">Cuando salgas de esta pestaña, suena un beep. Útil para simular la experiencia real: si lo escuchas, Canvas ya registró que saliste.</p>
+            </div>
+
+            <div class="log-box">
+              <div class="log-box-header">
+                <h3>Registro de eventos</h3>
+                <span class="ic-badge" id="log-count">0</span>
+              </div>
+              <div class="log-body">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:4px;padding:0;"></th>
+                      <th>Hora</th>
+                      <th>Tiempo</th>
+                      <th>Evento</th>
+                    </tr>
+                  </thead>
+                  <tbody id="log-tbody">
+                    <tr id="log-empty-row">
+                      <td colspan="4">
+                        <div class="log-empty">
+                          Presiona <strong>Empezar a registrar</strong> para comenzar.
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let contadorIniciado = false;
+  let tiempoInicio, tiempoDesenfoque;
+  let pestanaOculta = false;
+  let eventCount = 0;
+  let timerInterval = null;
+
+  function fmt(ms) {
+    const s = Math.floor(ms / 1000);
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }
+
+  function setChip(id, text, type) {
+    const c = document.getElementById(id);
+    c.className = 'status-chip ' + (type || '');
+    c.innerHTML = `<div class="dot"></div>${text}`;
+  }
+
+  function logMessage(msg, type) {
+    type = type || 'default';
+    const tbody = document.getElementById('log-tbody');
+
+    const emptyRow = document.getElementById('log-empty-row');
+    if (emptyRow) emptyRow.remove();
+
+    const now = new Date();
+    const time = now.toLocaleTimeString('es-MX');
+    const elapsed = contadorIniciado ? fmt(now - tiempoInicio) : '00:00';
+
+    const barClass = { out: 'bar-out', in: 'bar-in', start: 'bar-start', default: 'bar-default' }[type] || 'bar-default';
+
+    const tr = document.createElement('tr');
+    tr.className = `type-${type}`;
+    tr.innerHTML = `
+      <td class="td-bar ${barClass}"></td>
+      <td class="td-time">${time}</td>
+      <td class="td-elapsed">${elapsed}</td>
+      <td class="td-msg">${msg}</td>
+    `;
+    tbody.appendChild(tr);
+
+    const logBody = document.querySelector('.log-body');
+    logBody.scrollTop = logBody.scrollHeight;
+
+    eventCount++;
+    document.getElementById('log-count').textContent = eventCount;
+    document.getElementById('meta-eventos').textContent = eventCount;
+
+    const sb = document.getElementById('sidebar-badge');
+    sb.style.display = 'flex';
+    sb.textContent = eventCount > 9 ? '9+' : eventCount;
+
+    let r = JSON.parse(localStorage.getItem('registroEventos') || '[]');
+    r.push(`${time} (${elapsed}) - ${msg}`);
+    localStorage.setItem('registroEventos', JSON.stringify(r));
+  }
+
+  function iniciarContador() {
+    if (contadorIniciado) return;
+    contadorIniciado = true;
+    tiempoInicio = new Date();
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('meta-estado').textContent = 'Activo';
+    setChip('chip-rec', 'Grabación activa', 'green');
+    setChip('chip-focus', 'Ventana enfocada', 'green');
+    document.getElementById('meta-foco').textContent = 'Enfocada';
+    timerInterval = setInterval(() => {
+      document.getElementById('meta-tiempo').textContent = fmt(new Date() - tiempoInicio);
+    }, 1000);
+    logMessage('Registro iniciado', 'start');
+  }
+
+  function limpiarRegistros() {
+    // Limpiar localStorage
+    localStorage.removeItem('registroEventos');
+
+    // Limpiar DOM del log completamente
+    const tbody = document.getElementById('log-tbody');
+    tbody.innerHTML = `
+      <tr id="log-empty-row">
+        <td colspan="4">
+          <div class="log-empty">
+            Presiona <strong>Empezar a registrar</strong> para comenzar.
+          </div>
+        </td>
+      </tr>`;
+
+    // Resetear contador y UI
+    eventCount = 0;
+    document.getElementById('log-count').textContent = '0';
+    document.getElementById('meta-eventos').textContent = '0';
+    document.getElementById('meta-tiempo').textContent = '00:00';
+    document.getElementById('meta-estado').textContent = 'Inactivo';
+    document.getElementById('meta-foco').textContent = 'En espera';
+    document.getElementById('sidebar-badge').style.display = 'none';
+
+    setChip('chip-rec', 'Grabación inactiva', '');
+    setChip('chip-focus', 'Ventana en espera', '');
+
+    // Resetear estado de grabación
+    contadorIniciado = false;
+    tiempoInicio = null;
+    tiempoDesenfoque = null;
+    pestanaOculta = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    document.getElementById('btn-start').disabled = false;
+  }
+
+  function toggleCourseNav() {
+    const left = document.getElementById('left-side');
+    const btn = document.getElementById('courseMenuToggle');
+    const collapsed = left.classList.toggle('collapsed');
+    btn.title = collapsed ? 'Show Courses Navigation Menu' : 'Hide Courses Navigation Menu';
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!contadorIniciado) return;
+    if (document.visibilityState === 'hidden' && !pestanaOculta) {
+      tiempoDesenfoque = new Date();
+      pestanaOculta = true;
+      setChip('chip-focus', 'Fuera de la página', 'red');
+      document.getElementById('meta-foco').textContent = 'Ausente';
+      playBeep();
+      logMessage('Salió de la página', 'out');
+    } else if (document.visibilityState === 'visible' && pestanaOculta) {
+      const diff = new Date() - tiempoDesenfoque;
+      pestanaOculta = false;
+      setChip('chip-focus', 'Ventana enfocada', 'green');
+      document.getElementById('meta-foco').textContent = 'Enfocada';
+      logMessage(`Regresó después de ${fmt(diff)}`, 'in');
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    if (!contadorIniciado || pestanaOculta) return;
+    tiempoDesenfoque = new Date();
+    pestanaOculta = true;
+    setChip('chip-focus', 'Ventana desenfocada', 'red');
+    document.getElementById('meta-foco').textContent = 'Desenfocada';
+    playBeep();
+    logMessage('Ventana desenfocada', 'out');
+  });
+
+  window.addEventListener('focus', () => {
+    if (!contadorIniciado || !pestanaOculta) return;
+    const diff = new Date() - tiempoDesenfoque;
+    pestanaOculta = false;
+    setChip('chip-focus', 'Ventana enfocada', 'green');
+    document.getElementById('meta-foco').textContent = 'Enfocada';
+    logMessage(`Ventana enfocada de nuevo (${fmt(diff)} fuera)`, 'in');
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    // Colapsar menú por defecto en móvil
+    if (window.innerWidth <= 768) {
+      document.getElementById('left-side').classList.add('collapsed');
+    }
+
+    const saved = JSON.parse(localStorage.getItem('registroEventos') || '[]');
+    if (saved.length) {
+      const tbody = document.getElementById('log-tbody');
+      const emptyRow = document.getElementById('log-empty-row');
+      if (emptyRow) emptyRow.remove();
+      saved.forEach(msg => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="td-bar bar-default"></td><td class="td-time" colspan="3" style="color:var(--text-muted)">${msg}</td>`;
+        tbody.appendChild(tr);
+        eventCount++;
+      });
+      document.getElementById('log-count').textContent = eventCount;
+      document.getElementById('meta-eventos').textContent = eventCount;
+    }
+  });
+  function playBeep() {
+    if (!document.getElementById('sound-toggle').checked) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } catch(e) {}
+  }
+
+  function showHowItWorks(e) {
+    e.preventDefault();
+    document.getElementById('how-modal').style.display = 'flex';
+  }
+  function closeHowModal() {
+    document.getElementById('how-modal').style.display = 'none';
+  }
+  function showCredits(e) {
+    e.preventDefault();
+    document.getElementById('credits-modal').style.display = 'flex';
+  }
+  function closeCredits() {
+    document.getElementById('credits-modal').style.display = 'none';
+  }
+</script>
+
+<!-- How it works modal -->
+<div id="how-modal" style="display:none; position:fixed; inset:0; z-index:1000; align-items:center; justify-content:center;">
+  <div onclick="closeHowModal()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative;background:var(--surface);border-radius:4px;padding:32px 40px;max-width:520px;width:92%;box-shadow:0 4px 24px rgba(0,0,0,0.2);z-index:1;">
+    <h2 style="font-family:'Lato',sans-serif;font-weight:300;font-size:22px;color:var(--text);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">¿Cómo funciona la detección?</h2>
+
+    <p style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px;">
+      Canvas detecta si sales de un examen o tarea usando exactamente las mismas APIs de JavaScript que usa esta página:
+    </p>
+
+    <div style="background:var(--bg-secondary);border-left:4px solid var(--green);border-radius:2px;padding:12px 16px;margin-bottom:14px;font-size:12px;font-family:monospace;color:var(--text);line-height:1.8;">
+      <div><strong style="color:#00AC18;">document.visibilityState</strong> — detecta si cambias de pestaña o minimizas el navegador.</div>
+      <div style="margin-top:6px;"><strong style="color:#00AC18;">window.blur / window.focus</strong> — detecta si haces click fuera de la ventana del navegador.</div>
+    </div>
+
+    <p style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px;">
+      Cuando Canvas registra un evento de <em>visibilitychange</em> o <em>blur</em>, guarda en sus servidores la hora exacta y cuánto tiempo estuviste fuera. Eso es lo que le llega al profesor.
+    </p>
+
+    <div style="background:var(--bg-secondary);border:1px solid var(--yellow);border-radius:3px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--text);">
+      <strong>💡 Regla de oro:</strong> Si esta página no detecta que saliste, Canvas tampoco lo haría. Usa esto para practicar y entender exactamente qué acciones te delatan.
+    </div>
+
+    <button onclick="closeHowModal()" style="font-family:'Lato',sans-serif;font-size:14px;background:#00AC18;border:1px solid #008c13;color:#fff;padding:8px 24px;border-radius:3px;cursor:pointer;">Entendido</button>
+  </div>
+</div>
+
+<!-- Credits modal -->
+<div id="credits-modal" style="display:none; position:fixed; inset:0; z-index:1000; align-items:center; justify-content:center;">
+  <div onclick="closeCredits()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>
+  <div style="position:relative;background:var(--surface);border-radius:4px;padding:32px 40px;max-width:360px;width:90%;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.2);z-index:1;">
+    <div style="font-size:40px;margin-bottom:12px;">🤝</div>
+    <h2 style="font-family:'Lato',sans-serif;font-weight:300;font-size:22px;color:var(--text);margin-bottom:8px;">Diseñado por</h2>
+    <p style="font-size:20px;font-weight:700;color:#00AC18;margin-bottom:4px;">@fedesexxx</p>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:24px;">con la ayuda de <strong style="color:var(--text);">Claude</strong> ✨</p>
+    <button onclick="closeCredits()" style="font-family:'Lato',sans-serif;font-size:14px;background:#00AC18;border:1px solid #008c13;color:#fff;padding:8px 24px;border-radius:3px;cursor:pointer;width:100%;">Cerrar</button>
+  </div>
+</div>
 </body>
 </html>
-
