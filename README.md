@@ -38,7 +38,7 @@ No server-side components are used.
 
 ## Live Demo
 
-https://fedesexxx.github.io/canbebeaten/
+https://fedesexxx.github.io/CanvasMonitor/
 
 ---
 
